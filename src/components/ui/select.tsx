@@ -34,6 +34,7 @@ const SelectContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = 'popper', ...props }, ref) => (
   <SelectPrimitive.Portal>
+    <div className="fixed inset-0 z-40 bg-black/[0.06]" style={{ pointerEvents: 'none' }} aria-hidden="true" />
     <SelectPrimitive.Content
       ref={ref}
       className={cn(

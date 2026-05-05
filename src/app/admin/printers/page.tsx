@@ -91,7 +91,7 @@ export default function AdminPrintersPage() {
 
       {showForm && (
         <Card className="p-6">
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="BCCInno_P1S_04" />
@@ -100,16 +100,16 @@ export default function AdminPrintersPage() {
               <Label htmlFor="model">Model</Label>
               <Input id="model" value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="P1S" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select value={type} onValueChange={(v) => setType(v as 'FDM' | 'Resin')}>
-                <SelectTrigger id="type"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FDM">FDM</SelectItem>
-                  <SelectItem value="Resin">Resin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="type">Type</Label>
+            <Select value={type} onValueChange={(v) => setType(v as 'FDM' | 'Resin')}>
+              <SelectTrigger id="type"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FDM">FDM</SelectItem>
+                <SelectItem value="Resin">Resin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="mt-4 flex gap-2">
             <Button onClick={() => create.mutate()} disabled={!name || !modelName}>Create</Button>
@@ -186,18 +186,6 @@ function PrinterCard({
         <span className="text-muted-foreground">{p.totalHoursUsed.toFixed(1)}h logged</span>
       </div>
 
-      <div className="pt-2 border-t border-border space-y-2">
-        <Label>Set status</Label>
-        <Select value={p.status} onValueChange={onUpdateStatus}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="in_use">In use</SelectItem>
-            <SelectItem value="maintenance">Maintenance</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Bambu Lab config section */}
       <div className="border-t border-border pt-3">
         <button
@@ -265,6 +253,19 @@ function PrinterCard({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Set Status — last so dropdown opens below the card */}
+      <div className="pt-2 border-t border-border space-y-2">
+        <Label>Set status</Label>
+        <Select value={p.status} onValueChange={onUpdateStatus}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="available">Available</SelectItem>
+            <SelectItem value="in_use">In use</SelectItem>
+            <SelectItem value="maintenance">Maintenance</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </Card>
   );
