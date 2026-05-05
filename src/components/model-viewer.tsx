@@ -45,9 +45,13 @@ function computeGeometryStats(position: Float32Array, indices?: Uint16Array | Ui
 
 export default function ModelViewer({
   file,
+  fileUrl,
+  fileName,
   onLoad,
 }: {
-  file: File | null;
+  file?: File | null;
+  fileUrl?: string;
+  fileName?: string;
   onLoad?: (stats: ModelStats) => void;
 }) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -58,8 +62,10 @@ export default function ModelViewer({
   const [errorMsg, setErrorMsg] = useState('');
   const [dims, setDims] = useState<ModelStats['dims'] | null>(null);
 
+  const hasSource = !!(file || fileUrl);
+
   useEffect(() => {
-    if (!file || !mountRef.current) return;
+    if (!hasSource || !mountRef.current) return;
     const mount = mountRef.current;
     let cancelled = false;
     let animId = 0;
@@ -110,11 +116,21 @@ export default function ModelViewer({
         clippingPlanes: [clipPlane], clipShadows: true,
       });
 
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      const url = URL.createObjectURL(file);
+      const ext = file
+        ? file.name.split('.').pop()?.toLowerCase()
+        : (fileName ?? fileUrl ?? '').split('.').pop()?.toLowerCase();
+
+      let url: string;
+      let isObjectUrl = false;
+      if (file) {
+        url = URL.createObjectURL(file);
+        isObjectUrl = true;
+      } else {
+        url = fileUrl!;
+      }
 
       const setupScene = (obj: Object3D, stats: ModelStats) => {
-        if (cancelled) { URL.revokeObjectURL(url); return; }
+        if (cancelled) { if (isObjectUrl) URL.revokeObjectURL(url); return; }
 
         scene.add(obj);
         const bbox = new THREE.Box3().setFromObject(obj);
@@ -150,18 +166,18 @@ export default function ModelViewer({
         setDims(stats.dims);
         onLoad?.(stats);
         setStatus('ready');
-        URL.revokeObjectURL(url);
+        if (isObjectUrl) URL.revokeObjectURL(url);
       };
 
       const onError = (label: string) => () => {
         if (!cancelled) { setErrorMsg(`โหลด ${label} ไม่ได้`); setStatus('error'); }
-        URL.revokeObjectURL(url);
+        if (isObjectUrl) URL.revokeObjectURL(url);
       };
 
       if (ext === 'stl') {
         const loader = new STLLoader();
         loader.load(url, (geo) => {
-          if (cancelled) { URL.revokeObjectURL(url); return; }
+          if (cancelled) { if (isObjectUrl) URL.revokeObjectURL(url); return; }
           geo.computeVertexNormals();
 
           const pos = geo.attributes.position.array as Float32Array;
@@ -239,9 +255,9 @@ export default function ModelViewer({
       resetFnRef.current = null;
       if (canvas && mount.contains(canvas)) mount.removeChild(canvas);
     };
-  }, [file]);
+  }, [file, fileUrl, fileName]);
 
-  if (!file) return null;
+  if (!hasSource) return null;
 
   return (
     <div className="rounded-xl border border-purple-200 overflow-hidden bg-purple-50/30">

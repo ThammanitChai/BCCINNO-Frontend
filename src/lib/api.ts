@@ -71,8 +71,8 @@ export interface Printer {
 
 export interface Reservation {
   _id: string;
-  user: { _id: string; firstName: string; lastName: string; studentId: string; email?: string };
-  printer: { _id: string; name: string; modelName?: string; type?: string };
+  user: { _id: string; firstName: string; lastName: string; studentId: string; email?: string; track?: string };
+  printer: { _id: string; name: string; modelName?: string; type?: string; bambuSerial?: string; bambuIp?: string; bambuAccessCode?: string };
   jobName: string;
   filamentType?: string;
   filamentColor?: string;
@@ -87,6 +87,8 @@ export interface Reservation {
   modelFileName?: string;
   infillPercent?: number;
   cost?: number;
+  notes?: string;
+  pickupTime?: string;
 }
 
 export interface Filament {

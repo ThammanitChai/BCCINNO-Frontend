@@ -14,9 +14,11 @@ import {
 } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { formatHours } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 export default function AdminReservationsPage() {
   const [status, setStatus] = useState<string>('all');
+  const router = useRouter();
 
   const { data: reservations = [] } = useQuery({
     queryKey: ['admin', 'reservations', status],
@@ -68,7 +70,11 @@ export default function AdminReservationsPage() {
             </thead>
             <tbody>
               {reservations.map((r) => (
-                <tr key={r._id} className="border-b border-border last:border-0 hover:bg-secondary/30">
+                <tr
+                  key={r._id}
+                  className="border-b border-border last:border-0 hover:bg-secondary/30 cursor-pointer"
+                  onClick={() => router.push(`/admin/reservations/${r._id}`)}
+                >
                   <Td>
                     <div className="font-mono text-xs">
                       {format(new Date(r.scheduledStart), 'd MMM')}
