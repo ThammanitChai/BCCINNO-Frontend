@@ -31,7 +31,7 @@ export default function RegisterPage() {
     studentId: '',
     nationalIdLast4: '',
     phone: '',
-    track: 'biomedical',
+    track: 'training',
   });
 
   function update<K extends keyof RegisterPayload>(key: K, value: RegisterPayload[K]) {
@@ -109,22 +109,26 @@ export default function RegisterPage() {
           <form onSubmit={onSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First name</Label>
+                <Label htmlFor="firstName">First name <span className="text-muted-foreground font-normal">(English only)</span></Label>
                 <Input
                   id="firstName"
                   value={form.firstName}
                   onChange={(e) => update('firstName', e.target.value)}
                   placeholder="Thanapong"
+                  pattern="[A-Za-z\s\-]+"
+                  title="English letters only"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last name</Label>
+                <Label htmlFor="lastName">Last name <span className="text-muted-foreground font-normal">(English only)</span></Label>
                 <Input
                   id="lastName"
                   value={form.lastName}
                   onChange={(e) => update('lastName', e.target.value)}
                   placeholder="Satapornnanont"
+                  pattern="[A-Za-z\s\-]+"
+                  title="English letters only"
                   required
                 />
               </div>
@@ -142,31 +146,8 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="studentId">Student / Staff ID</Label>
-                <Input
-                  id="studentId"
-                  value={form.studentId}
-                  onChange={(e) => update('studentId', e.target.value)}
-                  placeholder="01979"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nid">Last 4 of National ID</Label>
-                <Input
-                  id="nid"
-                  maxLength={4}
-                  value={form.nationalIdLast4}
-                  onChange={(e) => update('nationalIdLast4', e.target.value)}
-                  placeholder="1327"
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="track">Track / Affiliation</Label>
+              <Label htmlFor="track">สังกัด / แทรค</Label>
               <Select
                 value={form.track}
                 onValueChange={(v) => update('track', v as RegisterPayload['track'])}
@@ -175,13 +156,38 @@ export default function RegisterPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="biomedical">Biomedical Engineering · 16h</SelectItem>
-                  <SelectItem value="engineer">Engineering · 8h</SelectItem>
-                  <SelectItem value="secondary">Secondary student · 4h</SelectItem>
-                  <SelectItem value="primary">Primary student · 2h</SelectItem>
-                  <SelectItem value="staff">BCC Staff · per approval</SelectItem>
+                  <SelectItem value="training">นักเรียนอบรมศูนย์วิจัยนวัตกรรมฯ · 6 ชม./เทอม</SelectItem>
+                  <SelectItem value="inno_smart">นักเรียน Inno / Smart · 10 ชม./เทอม</SelectItem>
+                  <SelectItem value="quota_bme">Quota Track: BME · 12 ชม./เทอม</SelectItem>
+                  <SelectItem value="quota_engineer">Quota Track: Engineer · 8 ชม./เทอม</SelectItem>
+                  <SelectItem value="olympic">นักเรียนความสามารถพิเศษทางวิชาการ (Olympic)</SelectItem>
+                  <SelectItem value="staff">Teacher / Academic Support / BCC Staff</SelectItem>
+                  <SelectItem value="customer">Customer (บุคคลทั่วไป)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="studentId">รหัสนักเรียน / รหัสเงินเดือน</Label>
+                <Input
+                  id="studentId"
+                  value={form.studentId}
+                  onChange={(e) => update('studentId', e.target.value)}
+                  placeholder="01979 หรือ 00000"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="nid">เลขบัตรประชาชน 4 หลักสุดท้าย</Label>
+                <Input
+                  id="nid"
+                  maxLength={4}
+                  value={form.nationalIdLast4}
+                  onChange={(e) => update('nationalIdLast4', e.target.value)}
+                  placeholder="1327"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

@@ -24,11 +24,13 @@ export interface RegisterPayload {
   nationalIdLast4?: string;
   phone?: string;
   track:
-    | 'biomedical'
-    | 'engineer'
-    | 'secondary'
-    | 'primary'
-    | 'staff';
+    | 'training'
+    | 'inno_smart'
+    | 'quota_bme'
+    | 'quota_engineer'
+    | 'olympic'
+    | 'staff'
+    | 'customer';
 }
 
 export const useAuth = create<AuthState>()(
