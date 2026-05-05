@@ -1,234 +1,96 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { SiteHeader } from '@/components/site-header';
-import { ArrowRight, Cpu, Activity, BarChart3, Layers } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
-    <>
-      <SiteHeader />
-      <main className="relative overflow-hidden">
-        {/* Hero */}
-        <section className="relative grain border-b border-border/60">
-          <div className="absolute inset-0 -z-10 opacity-60">
-            <div className="absolute top-20 right-10 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
-            <div className="absolute -bottom-20 left-10 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-          </div>
+    <main className="min-h-screen bg-white flex flex-col">
 
-          <div className="mx-auto max-w-7xl px-6 pt-20 pb-32 lg:pt-32 lg:pb-44">
-            <div className="grid lg:grid-cols-12 gap-12 items-end">
-              <div className="lg:col-span-8">
-                <div className="flex items-center gap-3 mb-8">
-                  <span className="dot dot-available animate-pulse" />
-                  <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-                    System online · Bangkok Christian College
-                  </span>
-                </div>
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-8 py-6">
+        <img src="/bcclogo.png" alt="BCC" className="h-8 w-auto" />
+        <Link
+          href="/login"
+          className="text-sm font-medium text-purple-700 hover:text-purple-900 transition-colors"
+        >
+          Sign in
+        </Link>
+      </nav>
 
-                <h1 className="font-display text-[clamp(3rem,9vw,8rem)] leading-[0.9] tracking-tight">
-                  <span className="block">Innovation</span>
-                  <span className="block">
-                    <span className="italic font-light">&amp;</span>{' '}
-                    <span className="text-accent">Invention</span>
-                  </span>
-                  <span className="block">Lab.</span>
-                </h1>
+      {/* Hero */}
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20">
 
-                <div className="mt-10 max-w-xl">
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    A management platform for the IEMS research center —{' '}
-                    <span className="text-foreground">3D printing, prototyping, and material logistics</span>
-                    {' '}for the BCC Biomedical and Engineering tracks.
-                  </p>
-                </div>
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-1.5 mb-10">
+          <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
+          <span className="text-xs font-medium text-purple-600 tracking-wide uppercase">
+            Bangkok Christian College · IEMS Lab
+          </span>
+        </div>
 
-                <div className="mt-12 flex flex-wrap items-center gap-4">
-                  <Button asChild size="lg" className="group">
-                    <Link href="/register">
-                      Become a member
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <Link href="/login">Sign in</Link>
-                  </Button>
-                </div>
-              </div>
+        {/* Heading */}
+        <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-gray-900 leading-[1.05] max-w-4xl">
+          Innovation &amp;{' '}
+          <span className="text-purple-600">Invention</span>{' '}
+          Lab
+        </h1>
 
-              {/* Stat block */}
-              <div className="lg:col-span-4">
-                <div className="border-l-2 border-accent pl-6 space-y-8">
-                  <Stat n="07" label="3D printers in fleet" />
-                  <Stat n="2" label="Engineering tracks" />
-                  <Stat n="24/7" label="Lab availability" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <p className="mt-8 text-lg text-gray-500 max-w-xl leading-relaxed">
+          ระบบจัดการห้องปฏิบัติการนวัตกรรม BCC — จองเครื่องพิมพ์ 3D ติดตามชั่วโมง และบริหารวัสดุ
+        </p>
 
-          {/* Marquee divider */}
-          <div className="border-y border-border/60 py-3 overflow-hidden">
-            <div className="flex animate-[shimmer_30s_linear_infinite] whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <span key={i} className="mx-8 flex items-center gap-8">
-                  Bambu Lab P1P · P1S · X1-Carbon
-                  <span className="text-accent">◆</span>
-                  PLA · ABS · PETG · TPU · PC-ABS
-                  <span className="text-accent">◆</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* CTAs */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-200 hover:bg-purple-700 transition-all"
+          >
+            สมัครสมาชิก
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-8 py-3.5 text-sm font-semibold text-gray-700 hover:border-purple-300 hover:text-purple-700 transition-all"
+          >
+            เข้าสู่ระบบ
+          </Link>
+        </div>
 
-        {/* Features */}
-        <section className="mx-auto max-w-7xl px-6 py-24">
-          <div className="mb-16 max-w-2xl">
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-              § 01 — Platform
+        {/* Stats */}
+        <div className="mt-20 grid grid-cols-3 gap-12 max-w-lg">
+          <Stat n="9" label="เครื่องพิมพ์" />
+          <Stat n="35" label="วัสดุ" />
+          <Stat n="6" label="แทรค" />
+        </div>
+      </section>
+
+      {/* Divider marquee */}
+      <div className="border-t border-gray-100 py-4 overflow-hidden">
+        <div className="flex whitespace-nowrap animate-[scroll_25s_linear_infinite]">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className="mx-8 text-xs font-mono text-gray-300 uppercase tracking-widest flex items-center gap-8">
+              BCCInno P1P · P1S · X1-Carbon · Phrozen
+              <span className="text-purple-300">◆</span>
+              PLA · ABS · TPU · PC-ABS · PETG
+              <span className="text-purple-300">◆</span>
             </span>
-            <h2 className="mt-4 font-display text-5xl tracking-tight">
-              Built for the BCC engineering studio.
-            </h2>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
-            <Feature
-              icon={<Cpu className="h-5 w-5" />}
-              num="01"
-              title="Member quotas"
-              text="Track-based monthly hour allocation, automatically applied at registration. Biomedical 16h, Engineer 8h."
-            />
-            <Feature
-              icon={<Activity className="h-5 w-5" />}
-              num="02"
-              title="Live check-in"
-              text="QR-based session tracking. Real-time printer occupancy, conflict detection, automatic hour deduction."
-            />
-            <Feature
-              icon={<Layers className="h-5 w-5" />}
-              num="03"
-              title="Material logistics"
-              text="Filament inventory by brand, color, and stock level. Low-stock alerts. Cost-per-gram pricing built in."
-            />
-            <Feature
-              icon={<BarChart3 className="h-5 w-5" />}
-              num="04"
-              title="Utilization insights"
-              text="Per-printer load, track-level engagement, daily completion rate. Admin dashboard with full audit trail."
-            />
-          </div>
-        </section>
-
-        {/* Tracks */}
-        <section className="border-t border-border/60 bg-secondary/40">
-          <div className="mx-auto max-w-7xl px-6 py-24 grid lg:grid-cols-2 gap-16">
-            <div>
-              <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-                § 02 — Membership
-              </span>
-              <h2 className="mt-4 font-display text-5xl tracking-tight">
-                Membership.
-              </h2>
-              <p className="mt-6 text-muted-foreground leading-relaxed max-w-md">
-                Members register through a structured onboarding flow that assigns track-specific allocation.
-                Use the printers, log materials, and let the system handle the bookkeeping.
-              </p>
-            </div>
-
-            <div className="space-y-px">
-              <TrackCard
-                code="BIO"
-                name="Biomedical Engineering"
-                hours="16h"
-                detail="Per term · Includes resin and PLA Pro access"
-              />
-              <TrackCard
-                code="ENG"
-                name="Engineering"
-                hours="8h"
-                detail="Per term · FDM access with all standard filaments"
-              />
-              <TrackCard
-                code="STAFF"
-                name="BCC Staff"
-                hours="As approved"
-                detail="Per request basis · Approved by lab administrator"
-              />
-            </div>
-          </div>
-        </section>
-
-        <footer className="border-t border-border/60 py-12">
-          <div className="mx-auto max-w-7xl px-6 flex flex-col md:flex-row justify-between gap-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            <span>BCC IEMS Lab · Bangkok, TH 10500</span>
-            <span>© {new Date().getFullYear()} · Crafted in Bangkok</span>
-          </div>
-        </footer>
-      </main>
-    </>
+      {/* Footer */}
+      <footer className="border-t border-gray-100 px-8 py-6 flex justify-between items-center">
+        <span className="text-xs text-gray-400">BCC IEMS Lab · Bangkok</span>
+        <span className="text-xs text-gray-400">© {new Date().getFullYear()}</span>
+      </footer>
+    </main>
   );
 }
 
 function Stat({ n, label }: { n: string; label: string }) {
   return (
-    <div>
-      <div className="font-display text-5xl numeric tracking-tight">{n}</div>
-      <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </div>
-    </div>
-  );
-}
-
-function Feature({
-  icon,
-  num,
-  title,
-  text,
-}: {
-  icon: React.ReactNode;
-  num: string;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="bg-background p-8 hover:bg-secondary/50 transition-colors group">
-      <div className="flex items-start justify-between mb-8">
-        <div className="rounded-md border border-border p-2 group-hover:border-accent group-hover:text-accent transition-colors">
-          {icon}
-        </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          {num}
-        </span>
-      </div>
-      <h3 className="font-display text-xl mb-3">{title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
-    </div>
-  );
-}
-
-function TrackCard({
-  code,
-  name,
-  hours,
-  detail,
-}: {
-  code: string;
-  name: string;
-  hours: string;
-  detail: string;
-}) {
-  return (
-    <div className="bg-background p-6 flex items-center gap-6 hover:bg-card transition-colors">
-      <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground w-16">
-        {code}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="font-display text-xl">{name}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">{detail}</div>
-      </div>
-      <div className="font-display text-3xl tracking-tight numeric text-accent">{hours}</div>
+    <div className="text-center">
+      <div className="text-3xl font-bold text-purple-600">{n}</div>
+      <div className="mt-1 text-xs text-gray-400 uppercase tracking-wide">{label}</div>
     </div>
   );
 }
