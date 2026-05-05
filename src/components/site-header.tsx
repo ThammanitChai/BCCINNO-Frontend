@@ -70,12 +70,12 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <div className="hidden sm:flex flex-col items-end leading-tight">
+              <Link href="/profile" className="hidden sm:flex flex-col items-end leading-tight hover:opacity-70 transition-opacity">
                 <span className="text-sm font-medium">{user.firstName} {user.lastName}</span>
                 <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                   {user.role === 'admin' ? '◆ Administrator' : `${user.studentId} · ${user.track}`}
                 </span>
-              </div>
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"

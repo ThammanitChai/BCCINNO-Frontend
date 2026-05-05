@@ -64,6 +64,9 @@ export interface Printer {
   currentUser?: { firstName: string; lastName: string; studentId: string };
   totalHoursUsed: number;
   notes?: string;
+  bambuSerial?: string;
+  bambuIp?: string;
+  bambuAccessCode?: string;
 }
 
 export interface Reservation {
@@ -80,6 +83,8 @@ export interface Reservation {
   actualEnd?: string;
   hoursConsumed?: number;
   status: 'reserved' | 'in_progress' | 'completed' | 'cancelled';
+  fileUrl?: string;
+  modelFileName?: string;
   cost?: number;
 }
 

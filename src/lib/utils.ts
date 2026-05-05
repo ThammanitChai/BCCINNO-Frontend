@@ -13,17 +13,17 @@ export function formatHours(h: number): string {
 
 export function trackLabel(track: string): string {
   switch (track) {
-    case 'biomedical':
-      return 'Biomedical Track';
-    case 'engineer':
-      return 'Engineering Track';
-    case 'secondary':
-      return 'Secondary';
-    case 'primary':
-      return 'Primary';
-    case 'staff':
-      return 'BCC Staff';
-    default:
-      return track;
+    case 'training':       return 'อบรม';
+    case 'inno_smart':     return 'Inno / Smart';
+    case 'quota_bme':      return 'Quota BME';
+    case 'quota_engineer': return 'Quota Engineer';
+    case 'olympic':        return 'Olympic';
+    case 'staff':          return 'Teacher / Staff';
+    case 'customer':       return 'Customer';
+    case 'biomedical':     return 'Biomedical Track';
+    case 'engineer':       return 'Engineering Track';
+    case 'secondary':      return 'Secondary';
+    case 'primary':        return 'Primary';
+    default:               return track;
   }
 }
