@@ -78,7 +78,7 @@ export default function RegisterPage() {
             <span className="italic font-light text-accent">studio.</span>
           </h1>
           <p className="text-primary-foreground/70 leading-relaxed">
-            Quotas are auto-assigned by track. Biomedical members get 16 hours per term, Engineering 8.
+            Quotas are auto-assigned by track. Inno/Smart 10h · BME 12h · Engineer 8h · Training 6h.
           </p>
         </div>
 
