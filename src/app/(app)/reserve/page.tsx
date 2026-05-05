@@ -86,10 +86,7 @@ export default function ReservePage() {
     [filaments]
   );
 
-  const defaultStart = format(
-    new Date(Math.ceil(Date.now() / 3600000) * 3600000),
-    "yyyy-MM-dd'T'HH:mm"
-  );
+  const defaultStart = format(new Date(), 'yyyy-MM-dd');
 
   const [printerId, setPrinterId] = useState('');
   const [jobName, setJobName] = useState('');
@@ -208,7 +205,7 @@ export default function ReservePage() {
         </span>
         <h1 className="mt-2 font-display text-5xl tracking-tight">Book a session.</h1>
         <p className="mt-2 text-muted-foreground">
-          เลือกเครื่อง ตั้งเวลา อัปโหลดโมเดล 3D แล้วยืนยัน
+          เลือกเครื่อง เลือกวัน อัปโหลดโมเดล 3D แล้วยืนยัน
         </p>
       </div>
 
@@ -320,9 +317,9 @@ export default function ReservePage() {
           {/* Time */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>เวลาเริ่ม</Label>
+              <Label>วันที่จอง</Label>
               <Input
-                type="datetime-local"
+                type="date"
                 value={scheduledStart}
                 onChange={(e) => setScheduledStart(e.target.value)}
                 required
@@ -437,9 +434,9 @@ export default function ReservePage() {
 
           {/* Summary */}
           <div className="rounded-lg border border-dashed border-border p-4 bg-secondary/30 space-y-1.5 font-mono text-xs">
-            <Row label="ช่วงเวลา" value={
-              endTime
-                ? `${format(new Date(scheduledStart), 'd MMM, HH:mm')} → ${format(endTime, 'HH:mm')}`
+            <Row label="วันที่" value={
+              scheduledStart
+                ? format(new Date(scheduledStart), 'd MMM yyyy')
                 : '—'
             } />
             <Row label="ระยะเวลา" value={formatHours(parseFloat(scheduledHours) || 0)} />
