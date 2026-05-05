@@ -61,13 +61,16 @@ export default function RegisterPage() {
       <aside className="hidden lg:flex relative bg-primary text-primary-foreground p-12 flex-col justify-between overflow-hidden">
         <div className="absolute inset-0 grain opacity-30" />
 
-        <Link
-          href="/"
-          className="font-mono text-[11px] uppercase tracking-[0.25em] flex items-center gap-2 hover:text-accent transition-colors w-fit relative"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          Return home
-        </Link>
+        <div className="relative flex items-center justify-between">
+          <Link
+            href="/"
+            className="font-mono text-[11px] uppercase tracking-[0.25em] flex items-center gap-2 hover:text-accent transition-colors w-fit"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            Return home
+          </Link>
+          <img src="/bcclogo.png" alt="BCC Logo" className="h-10 w-auto object-contain opacity-90" />
+        </div>
 
         <div className="relative space-y-4 max-w-md">
           <span className="font-mono text-[11px] uppercase tracking-[0.25em] opacity-60">
@@ -155,7 +158,7 @@ export default function RegisterPage() {
                 <SelectTrigger id="track">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-none">
+                <SelectContent style={{ maxHeight: '400px', overflowY: 'auto' }}>
                   <SelectItem value="training">นักเรียนที่เข้าอบรมของศูนย์วิจัยนวัตกรรมฯ</SelectItem>
                   <SelectItem value="inno_smart">นักเรียน Inno / Smart</SelectItem>
                   <SelectItem value="quota_bme">Quota Track: BME</SelectItem>
