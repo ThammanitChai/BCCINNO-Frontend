@@ -42,10 +42,13 @@ export default function LoginPage() {
       <aside className="hidden lg:flex relative bg-primary text-primary-foreground p-12 flex-col justify-between overflow-hidden">
         <div className="absolute inset-0 grain opacity-30" />
 
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-[0.25em] flex items-center gap-2 hover:text-accent transition-colors w-fit relative">
-          <ArrowLeft className="h-3 w-3" />
-          Return home
-        </Link>
+        <div className="relative flex items-center justify-between">
+          <Link href="/" className="font-mono text-[11px] uppercase tracking-[0.25em] flex items-center gap-2 hover:text-accent transition-colors w-fit">
+            <ArrowLeft className="h-3 w-3" />
+            Return home
+          </Link>
+          <img src="/bcclogo.png" alt="BCC Logo" className="h-10 w-auto object-contain opacity-90" />
+        </div>
 
         <div className="relative space-y-4 max-w-md">
           <span className="font-mono text-[11px] uppercase tracking-[0.25em] opacity-60">

@@ -35,17 +35,11 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
-          <Link href={user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/'} className="flex items-center gap-2.5 group">
-            <div className="relative h-8 w-8">
-              <svg viewBox="0 0 32 32" className="h-8 w-8" fill="none">
-                <rect x="2" y="2" width="28" height="28" rx="2" className="fill-primary" />
-                <path d="M9 10h14M9 16h14M9 22h9" stroke="hsl(var(--accent))" strokeWidth="1.75" strokeLinecap="square" />
-                <circle cx="22" cy="22" r="2" className="fill-accent" />
-              </svg>
-            </div>
+          <Link href={user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/'} className="flex items-center gap-3 group">
+            <img src="/bcclogo.png" alt="BCC" className="h-7 w-auto" />
             <div className="flex flex-col leading-none">
-              <span className="font-display text-lg font-semibold tracking-tight">IEMS</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Lab Studio</span>
+              <span className="font-display text-base font-semibold tracking-tight text-purple-700">IEMS Lab</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Innovation Studio</span>
             </div>
           </Link>
 
@@ -64,7 +58,7 @@ export function SiteHeader() {
                   >
                     {item.label}
                     {active && (
-                      <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-accent" />
+                      <span className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-purple-600" />
                     )}
                   </Link>
                 );

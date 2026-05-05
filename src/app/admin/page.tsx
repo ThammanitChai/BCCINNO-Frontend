@@ -31,7 +31,7 @@ interface OverviewStats {
   trackUsage: Array<{ _id: string; users: number; totalHoursUsed: number }>;
 }
 
-const ACCENT_COLORS = ['#0F2547', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#06B6D4'];
+const ACCENT_COLORS = ['#9333ea', '#a855f7', '#c084fc', '#7c3aed', '#6d28d9', '#4f46e5'];
 
 export default function AdminOverviewPage() {
   const { data } = useQuery({
