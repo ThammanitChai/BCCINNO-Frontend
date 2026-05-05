@@ -128,7 +128,7 @@ export default function Home() {
                 § 02 — Membership
               </span>
               <h2 className="mt-4 font-display text-5xl tracking-tight">
-                Two tracks. One studio.
+                Membership.
               </h2>
               <p className="mt-6 text-muted-foreground leading-relaxed max-w-md">
                 Members register through a structured onboarding flow that assigns track-specific allocation.

@@ -114,7 +114,7 @@ export default function RegisterPage() {
                   id="firstName"
                   value={form.firstName}
                   onChange={(e) => update('firstName', e.target.value)}
-                  placeholder="Thanapong"
+                  placeholder=""
                   pattern="[A-Za-z\s\-]+"
                   title="English letters only"
                   required
@@ -126,7 +126,7 @@ export default function RegisterPage() {
                   id="lastName"
                   value={form.lastName}
                   onChange={(e) => update('lastName', e.target.value)}
-                  placeholder="Satapornnanont"
+                  placeholder=""
                   pattern="[A-Za-z\s\-]+"
                   title="English letters only"
                   required
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                 type="email"
                 value={form.email}
                 onChange={(e) => update('email', e.target.value)}
-                placeholder="you@bcc1852.com"
+                placeholder=""
                 required
               />
             </div>
@@ -155,11 +155,11 @@ export default function RegisterPage() {
                 <SelectTrigger id="track">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="training">นักเรียนอบรมศูนย์วิจัยนวัตกรรมฯ · 6 ชม./เทอม</SelectItem>
-                  <SelectItem value="inno_smart">นักเรียน Inno / Smart · 10 ชม./เทอม</SelectItem>
-                  <SelectItem value="quota_bme">Quota Track: BME · 12 ชม./เทอม</SelectItem>
-                  <SelectItem value="quota_engineer">Quota Track: Engineer · 8 ชม./เทอม</SelectItem>
+                <SelectContent className="max-h-none">
+                  <SelectItem value="training">นักเรียนที่เข้าอบรมของศูนย์วิจัยนวัตกรรมฯ</SelectItem>
+                  <SelectItem value="inno_smart">นักเรียน Inno / Smart</SelectItem>
+                  <SelectItem value="quota_bme">Quota Track: BME</SelectItem>
+                  <SelectItem value="quota_engineer">Quota Track: Engineer</SelectItem>
                   <SelectItem value="olympic">นักเรียนความสามารถพิเศษทางวิชาการ (Olympic)</SelectItem>
                   <SelectItem value="staff">Teacher / Academic Support / BCC Staff</SelectItem>
                   <SelectItem value="customer">Customer (บุคคลทั่วไป)</SelectItem>
@@ -174,7 +174,7 @@ export default function RegisterPage() {
                   id="studentId"
                   value={form.studentId}
                   onChange={(e) => update('studentId', e.target.value)}
-                  placeholder="01979 หรือ 00000"
+                  placeholder=""
                   required
                 />
               </div>
@@ -185,7 +185,7 @@ export default function RegisterPage() {
                   maxLength={4}
                   value={form.nationalIdLast4}
                   onChange={(e) => update('nationalIdLast4', e.target.value)}
-                  placeholder="1327"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function RegisterPage() {
                   id="phone"
                   value={form.phone}
                   onChange={(e) => update('phone', e.target.value)}
-                  placeholder="096-947-9199"
+                  placeholder=""
                 />
               </div>
               <div className="space-y-2">
