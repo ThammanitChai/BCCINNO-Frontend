@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toaster';
 import { formatHours } from '@/lib/utils';
-import { addHours, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Upload, X, FileBox, Zap } from 'lucide-react';
 import type { ModelStats } from '@/components/model-viewer';
 
@@ -86,14 +86,12 @@ export default function ReservePage() {
     [filaments]
   );
 
-  const defaultStart = format(new Date(), 'yyyy-MM-dd');
-
   const [printerId, setPrinterId] = useState('');
   const [jobName, setJobName] = useState('');
   const [filamentType, setFilamentType] = useState('');
   const [filamentColor, setFilamentColor] = useState('');
   const [filamentWeight, setFilamentWeight] = useState('');
-  const [scheduledStart, setScheduledStart] = useState(defaultStart);
+  const [scheduledStart, setScheduledStart] = useState('');
   const [scheduledHours, setScheduledHours] = useState('1');
   const [submitting, setSubmitting] = useState(false);
 
@@ -103,6 +101,11 @@ export default function ReservePage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [infillPercent, setInfillPercent] = useState<number>(20);
   const [infillInput, setInfillInput] = useState('20');
+
+  // Set today's date only on the client to avoid SSR/hydration mismatch
+  useEffect(() => {
+    if (!scheduledStart) setScheduledStart(format(new Date(), 'yyyy-MM-dd'));
+  }, []);
 
   const estimate = useMemo(() => {
     if (!modelStats) return null;
@@ -192,10 +195,6 @@ export default function ReservePage() {
       setUploading(false);
     }
   }
-
-  const endTime = scheduledStart && scheduledHours
-    ? addHours(new Date(scheduledStart), parseFloat(scheduledHours) || 0)
-    : null;
 
   return (
     <div className="max-w-3xl">
