@@ -20,9 +20,49 @@ import {
 import { useToast } from '@/components/ui/toaster';
 import { formatHours } from '@/lib/utils';
 import { addHours, format } from 'date-fns';
-import { Upload, X, FileBox } from 'lucide-react';
+import { Upload, X, FileBox, Zap } from 'lucide-react';
+import type { ModelStats } from '@/components/model-viewer';
 
 const ModelViewer = dynamic(() => import('@/components/model-viewer'), { ssr: false, loading: () => null });
+
+// Material densities (g/cm³) — matched to our filament types
+const DENSITY: Record<string, number> = {
+  'PLA': 1.24, 'PLA Pro': 1.24, 'PLA Support': 1.24,
+  'PLA Mussel': 1.24, 'PLA Trigo': 1.24,
+  'ABS': 1.04, 'PC-ABS': 1.19,
+  'TPU95-HF': 1.21, 'PC': 1.20,
+  'PETG': 1.27, 'PETG-ESD': 1.27,
+  'PVA': 1.23,
+};
+
+// Bambu Studio P1P/P1S approximation
+// Layer 0.2mm, nozzle 0.4mm, 2 walls, 4 top/bottom layers
+function estimatePrint(stats: ModelStats, infill: number, material: string) {
+  const density = DENSITY[material] ?? 1.24;
+  const wallThick = 2 * 0.4;  // 2 walls × 0.4mm nozzle = 0.8mm
+
+  // Shell = all faces × wall thickness (top/bottom already included via surface area)
+  const shellVol = Math.min(stats.surfaceAreaMm2 * wallThick, stats.volumeMm3);
+  const innerVol = Math.max(0, stats.volumeMm3 - shellVol);
+  const infillVol = innerVol * (infill / 100);
+  const extrudedVol = shellVol + infillVol;  // mm³
+
+  const weightG = (extrudedVol / 1000) * density;  // g
+
+  // Effective volumetric extrusion rate (accounting for accel, travel, decel)
+  // Shell walls: ~7 mm³/s   Infill: ~12 mm³/s   Travel overhead: ×1.25
+  // Startup (heatup + leveling + purge): ~3 min
+  const shellSec = (shellVol / 7) * 1.25;
+  const infillSec = (infillVol / 12) * 1.25;
+  const startupSec = 180;
+  const totalSec = shellSec + infillSec + startupSec;
+  const hours = totalSec / 3600;
+
+  return {
+    weightG: Math.max(0.1, weightG),
+    hours: Math.max(0.1, hours),
+  };
+}
 
 export default function ReservePage() {
   const router = useRouter();
@@ -61,10 +101,16 @@ export default function ReservePage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [modelFile, setModelFile] = useState<File | null>(null);
+  const [modelStats, setModelStats] = useState<ModelStats | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [infillPercent, setInfillPercent] = useState<number>(20);
   const [infillInput, setInfillInput] = useState('20');
+
+  const estimate = useMemo(() => {
+    if (!modelStats) return null;
+    return estimatePrint(modelStats, infillPercent, filamentType);
+  }, [modelStats, infillPercent, filamentType]);
 
   const colorsForType = useMemo(
     () =>
@@ -82,6 +128,7 @@ export default function ReservePage() {
       return;
     }
     setModelFile(file);
+    setModelStats(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -351,7 +398,37 @@ export default function ReservePage() {
                 </div>
 
                 {/* 3D Preview */}
-                <ModelViewer file={modelFile} />
+                <ModelViewer file={modelFile} onLoad={setModelStats} />
+
+                {/* Print estimate */}
+                {estimate && (
+                  <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="h-3.5 w-3.5 text-purple-500" />
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-purple-700">
+                        Print estimate · Bambu P1S · 0.2 mm
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <EstBox
+                        label="น้ำหนัก"
+                        value={`~${estimate.weightG.toFixed(1)} g`}
+                        sub="±15%"
+                        onApply={() => setFilamentWeight(estimate.weightG.toFixed(1))}
+                      />
+                      <EstBox
+                        label="เวลาปริ้น"
+                        value={`~${fmtTime(estimate.hours)}`}
+                        sub="±20%"
+                        onApply={() => setScheduledHours(Math.max(0.5, parseFloat(estimate.hours.toFixed(2))).toString())}
+                      />
+                    </div>
+                    <p className="font-mono text-[9px] text-muted-foreground/50 mt-2">
+                      คำนวณจาก volume {(modelStats!.volumeMm3 / 1000).toFixed(1)} cm³ · infill {infillPercent}%
+                      {filamentType ? ` · ${filamentType}` : ''}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -391,6 +468,37 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between uppercase tracking-wider">
       <span className="text-muted-foreground">{label}</span>
       <span className="text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function fmtTime(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h === 0) return `${m} นาที`;
+  if (m === 0) return `${h} ชม.`;
+  return `${h} ชม. ${m} นาที`;
+}
+
+function EstBox({
+  label, value, sub, onApply,
+}: {
+  label: string; value: string; sub: string; onApply: () => void;
+}) {
+  return (
+    <div className="rounded-lg bg-white border border-purple-100 p-3 space-y-1">
+      <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="font-mono text-lg font-bold text-purple-700">{value}</div>
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-[9px] text-muted-foreground/60">{sub}</span>
+        <button
+          type="button"
+          onClick={onApply}
+          className="font-mono text-[9px] uppercase tracking-wider text-purple-600 hover:text-purple-800 transition-colors"
+        >
+          ใช้ค่านี้ →
+        </button>
+      </div>
     </div>
   );
 }

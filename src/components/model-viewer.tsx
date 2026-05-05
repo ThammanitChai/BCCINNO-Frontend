@@ -3,27 +3,60 @@
 import { useEffect, useRef, useState } from 'react';
 import { Layers, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
-import type { Object3D } from 'three';
+import type { Object3D, BufferGeometry, BufferAttribute } from 'three';
 
 type ClipFn = (pct: number) => void;
-type ResetFn = () => void;
 
-interface Dims { x: number; y: number; z: number }
+export interface ModelStats {
+  dims: { x: number; y: number; z: number };
+  volumeMm3: number;
+  surfaceAreaMm2: number;
+}
+
+// Signed-tetrahedra volume — works on any closed triangulated mesh
+function computeGeometryStats(position: Float32Array, indices?: Uint16Array | Uint32Array | null) {
+  let vol = 0, area = 0;
+
+  const getV = (i: number) => ({
+    x: position[i * 3], y: position[i * 3 + 1], z: position[i * 3 + 2],
+  });
+
+  const iter = (a: number, b: number, c: number) => {
+    const v0 = getV(a), v1 = getV(b), v2 = getV(c);
+    // Signed volume of tetrahedron with origin
+    vol += (v0.x * (v1.y * v2.z - v2.y * v1.z)
+           + v1.x * (v2.y * v0.z - v0.y * v2.z)
+           + v2.x * (v0.y * v1.z - v1.y * v0.z)) / 6;
+    // Triangle area via cross product
+    const ex = v1.x - v0.x, ey = v1.y - v0.y, ez = v1.z - v0.z;
+    const fx = v2.x - v0.x, fy = v2.y - v0.y, fz = v2.z - v0.z;
+    area += Math.sqrt((ey*fz-ez*fy)**2 + (ez*fx-ex*fz)**2 + (ex*fy-ey*fx)**2) / 2;
+  };
+
+  if (indices) {
+    for (let i = 0; i < indices.length; i += 3) iter(indices[i], indices[i+1], indices[i+2]);
+  } else {
+    const count = position.length / 3;
+    for (let i = 0; i < count; i += 3) iter(i, i+1, i+2);
+  }
+
+  return { volumeMm3: Math.abs(vol), surfaceAreaMm2: area };
+}
 
 export default function ModelViewer({
   file,
-  onDimensions,
+  onLoad,
 }: {
   file: File | null;
-  onDimensions?: (dims: Dims) => void;
+  onLoad?: (stats: ModelStats) => void;
 }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const clipFnRef = useRef<ClipFn | null>(null);
-  const resetFnRef = useRef<ResetFn | null>(null);
+  const resetFnRef = useRef<(() => void) | null>(null);
   const [layerPct, setLayerPct] = useState(100);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [dims, setDims] = useState<Dims | null>(null);
+  const [dims, setDims] = useState<ModelStats['dims'] | null>(null);
 
   useEffect(() => {
     if (!file || !mountRef.current) return;
@@ -50,10 +83,7 @@ export default function ModelViewer({
 
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0xf5f3ff);
-
       const camera = new THREE.PerspectiveCamera(45, w / h, 0.001, 100000);
-      camera.position.set(0, 2, 5);
-
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(w, h);
@@ -65,53 +95,41 @@ export default function ModelViewer({
       const sun = new THREE.DirectionalLight(0xffffff, 1.2);
       sun.position.set(5, 10, 5);
       scene.add(sun);
-      const fill = new THREE.DirectionalLight(0xc084fc, 0.4);
-      fill.position.set(-3, -3, -3);
-      scene.add(fill);
+      scene.add(Object.assign(new THREE.DirectionalLight(0xc084fc, 0.4), { position: { x: -3, y: -3, z: -3 } }));
 
       const grid = new THREE.GridHelper(200, 40, 0xddd6fe, 0xede9fe);
       scene.add(grid);
 
       const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
-
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
-      controls.minDistance = 0.1;
-      controls.maxDistance = 10000;
 
       const material = new THREE.MeshStandardMaterial({
-        color: 0x9333ea,
-        roughness: 0.45,
-        metalness: 0.1,
-        clippingPlanes: [clipPlane],
-        clipShadows: true,
+        color: 0x9333ea, roughness: 0.45, metalness: 0.1,
+        clippingPlanes: [clipPlane], clipShadows: true,
       });
 
       const ext = file.name.split('.').pop()?.toLowerCase();
       const url = URL.createObjectURL(file);
 
-      const setupObject = (obj: Object3D) => {
+      const setupScene = (obj: Object3D, stats: ModelStats) => {
         if (cancelled) { URL.revokeObjectURL(url); return; }
 
         scene.add(obj);
+        const bbox = new THREE.Box3().setFromObject(obj);
+        const center = new THREE.Vector3();
+        bbox.getCenter(center);
+        const size = new THREE.Vector3();
+        bbox.getSize(size);
 
-        // Raw dimensions before scaling (mm for STL exported from CAD)
-        const rawBbox = new THREE.Box3().setFromObject(obj);
-        const rawSize = new THREE.Vector3();
-        rawBbox.getSize(rawSize);
-        const rawCenter = new THREE.Vector3();
-        rawBbox.getCenter(rawCenter);
-
-        const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z);
+        const maxDim = Math.max(size.x, size.y, size.z);
         const scaleFactor = 4 / maxDim;
         obj.scale.setScalar(scaleFactor);
-        obj.position.sub(rawCenter.multiplyScalar(scaleFactor));
+        obj.position.sub(center.multiplyScalar(scaleFactor));
 
-        const finalBbox = new THREE.Box3().setFromObject(obj);
-        const minY = finalBbox.min.y;
-        const maxY = finalBbox.max.y;
-
+        const fb = new THREE.Box3().setFromObject(obj);
+        const minY = fb.min.y, maxY = fb.max.y;
         grid.position.y = minY - 0.02;
         clipPlane.constant = maxY;
 
@@ -120,7 +138,7 @@ export default function ModelViewer({
         controls.target.set(0, (minY + maxY) / 2, 0);
         controls.update();
 
-        clipFnRef.current = (pct: number) => {
+        clipFnRef.current = (pct) => {
           clipPlane.constant = minY + (maxY - minY) * (pct / 100);
         };
         resetFnRef.current = () => {
@@ -129,21 +147,14 @@ export default function ModelViewer({
           controls.update();
         };
 
-        const d: Dims = {
-          x: parseFloat(rawSize.x.toFixed(2)),
-          y: parseFloat(rawSize.y.toFixed(2)),
-          z: parseFloat(rawSize.z.toFixed(2)),
-        };
-        setDims(d);
-        onDimensions?.(d);
+        setDims(stats.dims);
+        onLoad?.(stats);
         setStatus('ready');
         URL.revokeObjectURL(url);
       };
 
       const onError = (label: string) => () => {
-        if (cancelled) return;
-        setErrorMsg(`โหลด ${label} ไม่ได้`);
-        setStatus('error');
+        if (!cancelled) { setErrorMsg(`โหลด ${label} ไม่ได้`); setStatus('error'); }
         URL.revokeObjectURL(url);
       };
 
@@ -152,15 +163,49 @@ export default function ModelViewer({
         loader.load(url, (geo) => {
           if (cancelled) { URL.revokeObjectURL(url); return; }
           geo.computeVertexNormals();
-          setupObject(new THREE.Mesh(geo, material));
+
+          const pos = geo.attributes.position.array as Float32Array;
+          const idx = geo.index
+            ? (geo.index.array as Uint16Array | Uint32Array)
+            : null;
+          const { volumeMm3, surfaceAreaMm2 } = computeGeometryStats(pos, idx);
+
+          const rawBbox = new THREE.Box3().setFromBufferAttribute(geo.attributes.position as BufferAttribute);
+          const rawSize = new THREE.Vector3();
+          rawBbox.getSize(rawSize);
+
+          const stats: ModelStats = {
+            dims: { x: +rawSize.x.toFixed(2), y: +rawSize.y.toFixed(2), z: +rawSize.z.toFixed(2) },
+            volumeMm3,
+            surfaceAreaMm2,
+          };
+          setupScene(new THREE.Mesh(geo, material), stats);
         }, undefined, onError('STL'));
+
       } else if (ext === 'obj') {
         const loader = new OBJLoader();
         loader.load(url, (group) => {
+          let totalVol = 0, totalArea = 0;
           group.traverse((child) => {
-            if ((child as any).isMesh) (child as any).material = material;
+            if ((child as any).isMesh) {
+              (child as any).material = material;
+              const geo = (child as any).geometry as BufferGeometry;
+              const pos = geo.attributes.position.array as Float32Array;
+              const idx = geo.index ? (geo.index.array as Uint16Array | Uint32Array) : null;
+              const s = computeGeometryStats(pos, idx);
+              totalVol += s.volumeMm3;
+              totalArea += s.surfaceAreaMm2;
+            }
           });
-          setupObject(group);
+          const rawBbox = new THREE.Box3().setFromObject(group);
+          const rawSize = new THREE.Vector3();
+          rawBbox.getSize(rawSize);
+          const stats: ModelStats = {
+            dims: { x: +rawSize.x.toFixed(2), y: +rawSize.y.toFixed(2), z: +rawSize.z.toFixed(2) },
+            volumeMm3: totalVol,
+            surfaceAreaMm2: totalArea,
+          };
+          setupScene(group, stats);
         }, undefined, onError('OBJ'));
       } else {
         setErrorMsg('รองรับ .stl และ .obj เท่านั้น');
@@ -196,21 +241,11 @@ export default function ModelViewer({
     };
   }, [file]);
 
-  const handleSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const pct = +e.target.value;
-    setLayerPct(pct);
-    clipFnRef.current?.(pct);
-  };
-
   if (!file) return null;
 
   return (
     <div className="rounded-xl border border-purple-200 overflow-hidden bg-purple-50/30">
-      <div
-        ref={mountRef}
-        className="relative w-full"
-        style={{ height: 320, touchAction: 'none' }}
-      >
+      <div ref={mountRef} className="relative w-full" style={{ height: 320, touchAction: 'none' }}>
         {status === 'loading' && (
           <div className="absolute inset-0 flex items-center justify-center bg-purple-50/60">
             <span className="font-mono text-xs text-purple-500 animate-pulse">กำลังโหลดโมเดล…</span>
@@ -225,7 +260,6 @@ export default function ModelViewer({
 
       {status === 'ready' && (
         <div className="border-t border-purple-100 bg-white">
-          {/* Dimensions */}
           {dims && (
             <div className="grid grid-cols-3 divide-x divide-purple-100 border-b border-purple-100">
               <DimBox label="W (X)" value={dims.x} />
@@ -233,8 +267,6 @@ export default function ModelViewer({
               <DimBox label="H (Z)" value={dims.z} />
             </div>
           )}
-
-          {/* Layer slice */}
           <div className="px-4 py-3 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -243,17 +275,13 @@ export default function ModelViewer({
                   Layer slice · {layerPct}%
                 </span>
               </div>
-              <Button
-                variant="ghost" size="icon" className="h-6 w-6"
-                onClick={() => resetFnRef.current?.()}
-                title="Reset view"
-              >
+              <Button variant="ghost" size="icon" className="h-6 w-6"
+                onClick={() => resetFnRef.current?.()} title="Reset view">
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
             </div>
-            <input
-              type="range" min={0} max={100} value={layerPct}
-              onChange={handleSlider}
+            <input type="range" min={0} max={100} value={layerPct}
+              onChange={(e) => { const p = +e.target.value; setLayerPct(p); clipFnRef.current?.(p); }}
               className="w-full h-1.5 accent-purple-600 cursor-pointer"
             />
             <p className="font-mono text-[10px] text-muted-foreground/50">
