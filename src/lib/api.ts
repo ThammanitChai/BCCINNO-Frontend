@@ -33,11 +33,13 @@ api.interceptors.response.use(
 );
 
 export type Track =
-  | 'biomedical'
-  | 'engineer'
-  | 'secondary'
-  | 'primary'
-  | 'staff';
+  | 'training'
+  | 'inno_smart'
+  | 'quota_bme'
+  | 'quota_engineer'
+  | 'olympic'
+  | 'staff'
+  | 'customer';
 
 export interface User {
   id: string;
