@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toaster';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 export default function AdminPrintersPage() {
   const { toast } = useToast();
@@ -46,6 +46,14 @@ export default function AdminPrintersPage() {
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       api.patch(`/printers/${id}`, { status }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['printers'] }),
+  });
+
+  const deletePrinter = useMutation({
+    mutationFn: (id: string) => api.delete(`/printers/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['printers'] });
+      toast({ title: 'Printer deleted', variant: 'success' });
+    },
   });
 
   return (
@@ -105,15 +113,27 @@ export default function AdminPrintersPage() {
                 </div>
                 <div className="font-display text-xl mt-1">{p.name}</div>
               </div>
-              <span
-                className={
-                  p.status === 'available'
-                    ? 'dot dot-available'
-                    : p.status === 'in_use'
-                      ? 'dot dot-busy'
-                      : 'dot dot-maintenance'
-                }
-              />
+              <div className="flex items-center gap-2">
+                <span
+                  className={
+                    p.status === 'available'
+                      ? 'dot dot-available'
+                      : p.status === 'in_use'
+                        ? 'dot dot-busy'
+                        : 'dot dot-maintenance'
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    if (confirm(`Delete "${p.name}"?`)) deletePrinter.mutate(p._id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-xs font-mono">
