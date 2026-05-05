@@ -244,7 +244,7 @@ export default function ReservePage() {
           </div>
 
           {/* Filament */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Filament type</Label>
               <Select value={filamentType} onValueChange={(v) => { setFilamentType(v); setFilamentColor(''); }}>
@@ -256,25 +256,27 @@ export default function ReservePage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Color</Label>
-              <Select value={filamentColor} onValueChange={setFilamentColor} disabled={!filamentType}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                <SelectContent>
-                  {colorsForType.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>น้ำหนัก (g)</Label>
-              <Input
-                type="number" min="0" step="0.1"
-                value={filamentWeight}
-                onChange={(e) => setFilamentWeight(e.target.value)}
-                placeholder="0"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Color</Label>
+                <Select value={filamentColor} onValueChange={setFilamentColor} disabled={!filamentType}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    {colorsForType.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>น้ำหนัก (g)</Label>
+                <Input
+                  type="number" min="0" step="0.1"
+                  value={filamentWeight}
+                  onChange={(e) => setFilamentWeight(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
 
