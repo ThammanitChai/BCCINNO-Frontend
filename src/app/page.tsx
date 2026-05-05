@@ -28,10 +28,8 @@ export default function Home() {
         </div>
 
         {/* Heading */}
-        <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-gray-900 leading-[1.05] max-w-4xl">
-          Innovation &amp;{' '}
-          <span className="text-purple-600">Invention</span>{' '}
-          Lab
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gray-900 leading-tight whitespace-nowrap">
+          Innovation &amp; <span className="text-purple-600">Invention</span> Lab
         </h1>
 
         <p className="mt-8 text-lg text-gray-500 max-w-xl leading-relaxed">
