@@ -8,14 +8,22 @@ import type { Object3D } from 'three';
 type ClipFn = (pct: number) => void;
 type ResetFn = () => void;
 
-export default function ModelViewer({ file }: { file: File | null }) {
+interface Dims { x: number; y: number; z: number }
+
+export default function ModelViewer({
+  file,
+  onDimensions,
+}: {
+  file: File | null;
+  onDimensions?: (dims: Dims) => void;
+}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const clipFnRef = useRef<ClipFn | null>(null);
   const resetFnRef = useRef<ResetFn | null>(null);
   const [layerPct, setLayerPct] = useState(100);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [info, setInfo] = useState('');
+  const [dims, setDims] = useState<Dims | null>(null);
 
   useEffect(() => {
     if (!file || !mountRef.current) return;
@@ -26,7 +34,7 @@ export default function ModelViewer({ file }: { file: File | null }) {
 
     setStatus('loading');
     setLayerPct(100);
-    setInfo('');
+    setDims(null);
     clipFnRef.current = null;
     resetFnRef.current = null;
 
@@ -53,7 +61,6 @@ export default function ModelViewer({ file }: { file: File | null }) {
       canvas = renderer.domElement;
       mount.appendChild(canvas);
 
-      // Lights
       scene.add(new THREE.AmbientLight(0xffffff, 0.8));
       const sun = new THREE.DirectionalLight(0xffffff, 1.2);
       sun.position.set(5, 10, 5);
@@ -62,11 +69,9 @@ export default function ModelViewer({ file }: { file: File | null }) {
       fill.position.set(-3, -3, -3);
       scene.add(fill);
 
-      // Grid
       const grid = new THREE.GridHelper(200, 40, 0xddd6fe, 0xede9fe);
       scene.add(grid);
 
-      // Clipping plane: show where y <= constant
       const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
 
       const controls = new OrbitControls(camera, renderer.domElement);
@@ -91,16 +96,17 @@ export default function ModelViewer({ file }: { file: File | null }) {
 
         scene.add(obj);
 
-        const bbox = new THREE.Box3().setFromObject(obj);
-        const center = new THREE.Vector3();
-        bbox.getCenter(center);
-        const size = new THREE.Vector3();
-        bbox.getSize(size);
+        // Raw dimensions before scaling (mm for STL exported from CAD)
+        const rawBbox = new THREE.Box3().setFromObject(obj);
+        const rawSize = new THREE.Vector3();
+        rawBbox.getSize(rawSize);
+        const rawCenter = new THREE.Vector3();
+        rawBbox.getCenter(rawCenter);
 
-        const maxDim = Math.max(size.x, size.y, size.z);
+        const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z);
         const scaleFactor = 4 / maxDim;
         obj.scale.setScalar(scaleFactor);
-        obj.position.sub(center.multiplyScalar(scaleFactor));
+        obj.position.sub(rawCenter.multiplyScalar(scaleFactor));
 
         const finalBbox = new THREE.Box3().setFromObject(obj);
         const minY = finalBbox.min.y;
@@ -118,23 +124,25 @@ export default function ModelViewer({ file }: { file: File | null }) {
           clipPlane.constant = minY + (maxY - minY) * (pct / 100);
         };
         resetFnRef.current = () => {
-          controls.reset();
           camera.position.set(camDist * 0.7, camDist * 0.5, camDist);
           controls.target.set(0, (minY + maxY) / 2, 0);
           controls.update();
         };
 
-        const verts = size.x * size.y * size.z > 0
-          ? `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)} mm`
-          : '';
-        setInfo(verts);
+        const d: Dims = {
+          x: parseFloat(rawSize.x.toFixed(2)),
+          y: parseFloat(rawSize.y.toFixed(2)),
+          z: parseFloat(rawSize.z.toFixed(2)),
+        };
+        setDims(d);
+        onDimensions?.(d);
         setStatus('ready');
         URL.revokeObjectURL(url);
       };
 
       const onError = (label: string) => () => {
         if (cancelled) return;
-        setErrorMsg(`Failed to load ${label}`);
+        setErrorMsg(`โหลด ${label} ไม่ได้`);
         setStatus('error');
         URL.revokeObjectURL(url);
       };
@@ -176,11 +184,8 @@ export default function ModelViewer({ file }: { file: File | null }) {
         renderer.setSize(w2, h);
       };
       window.addEventListener('resize', onResize);
-
       return () => window.removeEventListener('resize', onResize);
-    })().then((cleanup) => {
-      if (cancelled) cleanup?.();
-    });
+    })().then((cleanup) => { if (cancelled) cleanup?.(); });
 
     return () => {
       cancelled = true;
@@ -219,40 +224,54 @@ export default function ModelViewer({ file }: { file: File | null }) {
       </div>
 
       {status === 'ready' && (
-        <div className="px-4 py-3 border-t border-purple-100 space-y-2 bg-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Layers className="h-3.5 w-3.5 text-purple-500" />
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Layer slice · {layerPct}%
-              </span>
-              {info && (
-                <span className="font-mono text-[10px] text-muted-foreground/60">{info}</span>
-              )}
+        <div className="border-t border-purple-100 bg-white">
+          {/* Dimensions */}
+          {dims && (
+            <div className="grid grid-cols-3 divide-x divide-purple-100 border-b border-purple-100">
+              <DimBox label="W (X)" value={dims.x} />
+              <DimBox label="D (Y)" value={dims.y} />
+              <DimBox label="H (Z)" value={dims.z} />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={() => resetFnRef.current?.()}
-              title="Reset view"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </Button>
+          )}
+
+          {/* Layer slice */}
+          <div className="px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers className="h-3.5 w-3.5 text-purple-500" />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Layer slice · {layerPct}%
+                </span>
+              </div>
+              <Button
+                variant="ghost" size="icon" className="h-6 w-6"
+                onClick={() => resetFnRef.current?.()}
+                title="Reset view"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <input
+              type="range" min={0} max={100} value={layerPct}
+              onChange={handleSlider}
+              className="w-full h-1.5 accent-purple-600 cursor-pointer"
+            />
+            <p className="font-mono text-[10px] text-muted-foreground/50">
+              คลิกลาก: หมุน · Scroll: ซูม · คลิกขวาลาก: เลื่อน
+            </p>
           </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={layerPct}
-            onChange={handleSlider}
-            className="w-full h-1.5 accent-purple-600 cursor-pointer"
-          />
-          <p className="font-mono text-[10px] text-muted-foreground/50">
-            คลิกลาก: หมุน · Scroll: ซูม · คลิกขวาลาก: เลื่อน
-          </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function DimBox({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex flex-col items-center py-2.5 px-3">
+      <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className="font-mono text-base font-semibold text-purple-700 mt-0.5">{value}</span>
+      <span className="font-mono text-[9px] text-muted-foreground/60">mm</span>
     </div>
   );
 }

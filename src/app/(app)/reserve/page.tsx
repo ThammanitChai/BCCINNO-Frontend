@@ -63,6 +63,8 @@ export default function ReservePage() {
   const [modelFile, setModelFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [infillPercent, setInfillPercent] = useState<number>(20);
+  const [infillInput, setInfillInput] = useState('20');
 
   const colorsForType = useMemo(
     () =>
@@ -130,6 +132,7 @@ export default function ReservePage() {
         scheduledHours: hours,
         fileUrl,
         modelFileName,
+        infillPercent,
       });
 
       toast({ title: 'จองสำเร็จ', description: 'ระบบบันทึกการจองแล้ว', variant: 'success' });
@@ -228,6 +231,43 @@ export default function ReservePage() {
             </div>
           </div>
 
+          {/* Infill */}
+          <div className="space-y-2">
+            <Label>Infill %</Label>
+            <div className="flex flex-wrap gap-2 items-center">
+              {[10, 15, 20, 25, 30, 50, 75, 100].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => { setInfillPercent(v); setInfillInput(String(v)); }}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold border transition-all ${
+                    infillPercent === v
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : 'bg-white text-muted-foreground border-border hover:border-purple-400 hover:text-purple-600'
+                  }`}
+                >
+                  {v}%
+                </button>
+              ))}
+              <div className="flex items-center gap-1.5 ml-1">
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={infillInput}
+                  onChange={(e) => {
+                    setInfillInput(e.target.value);
+                    const n = parseInt(e.target.value);
+                    if (!isNaN(n) && n >= 1 && n <= 100) setInfillPercent(n);
+                  }}
+                  className="w-20 h-8 text-sm font-mono"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">ความหนาแน่นของโครงสร้างภายใน — ทั่วไปใช้ 15-20%</p>
+          </div>
+
           {/* Time */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -324,6 +364,7 @@ export default function ReservePage() {
                 : '—'
             } />
             <Row label="ระยะเวลา" value={formatHours(parseFloat(scheduledHours) || 0)} />
+            <Row label="Infill" value={`${infillPercent}%`} />
             <Row label="ชั่วโมงคงเหลือหลังจอง" value={
               user
                 ? formatHours(Math.max(0, user.hoursRemaining - (parseFloat(scheduledHours) || 0)))

@@ -107,6 +107,9 @@ export default function ReservationDetailPage() {
             value={format(new Date(reservation.scheduledStart), "d MMM yyyy · HH:mm 'น.'")}
           />
           <Item label="Estimated duration" value={formatHours(reservation.scheduledHours)} />
+          {reservation.infillPercent != null && (
+            <Item label="Infill" value={`${reservation.infillPercent}%`} />
+          )}
           <Item
             label="Filament"
             value={

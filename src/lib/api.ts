@@ -85,6 +85,7 @@ export interface Reservation {
   status: 'reserved' | 'in_progress' | 'completed' | 'cancelled';
   fileUrl?: string;
   modelFileName?: string;
+  infillPercent?: number;
   cost?: number;
 }
 
