@@ -31,7 +31,7 @@ export default function DashboardPage() {
     ? Math.min(100, (user.hoursUsed / user.hoursQuota) * 100)
     : 0;
 
-  const upcoming = reservations.filter((r) => r.status === 'reserved').slice(0, 3);
+  const upcoming = reservations.filter((r) => ['pending_review', 'pending_confirmation', 'confirmed'].includes(r.status)).slice(0, 3);
   const inProgress = reservations.find((r) => r.status === 'in_progress');
   const completed = reservations.filter((r) => r.status === 'completed').length;
 
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                 Currently printing: {inProgress.jobName}
               </div>
               <div className="text-sm text-muted-foreground font-mono">
-                {inProgress.printer.name} · started{' '}
+                {inProgress.printer?.name ?? '—'} · started{' '}
                 {inProgress.actualStart &&
                   formatDistanceToNow(new Date(inProgress.actualStart), { addSuffix: true })}
               </div>
@@ -212,12 +212,12 @@ function ReservationRow({ r }: { r: Reservation }) {
       <div className="min-w-0 flex-1">
         <div className="font-medium truncate">{r.jobName}</div>
         <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground mt-0.5">
-          {r.printer.name} · {format(new Date(r.scheduledStart), 'd MMM · HH:mm')} ·{' '}
-          {formatHours(r.scheduledHours)}
+          {r.printer?.name ?? r.printerType} · {format(new Date(r.scheduledStart), 'd MMM')}
+          {r.estimatedHours != null && ` · ~${r.estimatedHours}h`}
         </div>
       </div>
-      <Badge variant={r.status === 'reserved' ? 'outline' : 'secondary'}>
-        {r.status.replace('_', ' ')}
+      <Badge variant={r.status === 'pending_confirmation' ? 'default' : 'secondary'}>
+        {r.status.replace(/_/g, ' ')}
       </Badge>
     </Card>
   );

@@ -46,10 +46,12 @@ export default function AdminReservationsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="reserved">Reserved</SelectItem>
-              <SelectItem value="in_progress">In progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="pending_review">รอตรวจสอบ</SelectItem>
+              <SelectItem value="pending_confirmation">รอยืนยัน</SelectItem>
+              <SelectItem value="confirmed">ยืนยันแล้ว</SelectItem>
+              <SelectItem value="in_progress">กำลังปริ้น</SelectItem>
+              <SelectItem value="completed">เสร็จแล้ว</SelectItem>
+              <SelectItem value="cancelled">ยกเลิก</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,28 +96,28 @@ export default function AdminReservationsPage() {
                   </Td>
                   <Td>{r.jobName}</Td>
                   <Td>
-                    <span className="font-mono text-xs">{r.printer.name}</span>
+                    <span className="font-mono text-xs">{r.printer?.name ?? r.printerType}</span>
                   </Td>
                   <Td>
                     <span className="font-mono numeric">
                       {r.hoursConsumed != null && r.hoursConsumed > 0
                         ? formatHours(r.hoursConsumed)
-                        : formatHours(r.scheduledHours)}
+                        : r.estimatedHours != null
+                          ? `~${formatHours(r.estimatedHours)}`
+                          : '—'}
                     </span>
                   </Td>
                   <Td>
                     <Badge
                       variant={
-                        r.status === 'completed'
-                          ? 'success'
-                          : r.status === 'in_progress'
-                            ? 'danger'
-                            : r.status === 'cancelled'
-                              ? 'outline'
-                              : 'secondary'
+                        r.status === 'completed' ? 'success'
+                          : r.status === 'in_progress' ? 'danger'
+                            : r.status === 'cancelled' ? 'outline'
+                              : r.status === 'pending_confirmation' ? 'default'
+                                : 'secondary'
                       }
                     >
-                      {r.status.replace('_', ' ')}
+                      {r.status.replace(/_/g, ' ')}
                     </Badge>
                   </Td>
                 </tr>

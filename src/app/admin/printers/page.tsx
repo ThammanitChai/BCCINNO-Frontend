@@ -24,7 +24,7 @@ export default function AdminPrintersPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [modelName, setModelName] = useState('');
-  const [type, setType] = useState<'FDM' | 'Resin'>('FDM');
+  const [type, setType] = useState<'FDM_open' | 'FDM_closed' | 'Resin'>('FDM_open');
   const [expandedBambu, setExpandedBambu] = useState<string | null>(null);
 
   const { data: printers = [] } = useQuery({
@@ -103,11 +103,12 @@ export default function AdminPrintersPage() {
           </div>
           <div className="space-y-2 mt-4">
             <Label htmlFor="type">Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as 'FDM' | 'Resin')}>
+            <Select value={type} onValueChange={(v) => setType(v as 'FDM_open' | 'FDM_closed' | 'Resin')}>
               <SelectTrigger id="type"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="FDM">FDM</SelectItem>
-                <SelectItem value="Resin">Resin</SelectItem>
+                <SelectItem value="FDM_open">FDM ระบบเปิด</SelectItem>
+                <SelectItem value="FDM_closed">FDM ระบบปิด</SelectItem>
+                <SelectItem value="Resin">เลซิน (Resin)</SelectItem>
               </SelectContent>
             </Select>
           </div>

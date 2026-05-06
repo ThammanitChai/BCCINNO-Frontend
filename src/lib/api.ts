@@ -8,7 +8,6 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach token from localStorage on every request
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('iems_token');
@@ -21,7 +20,6 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && typeof window !== 'undefined') {
-      // Token expired or invalid
       const path = window.location.pathname;
       if (!path.startsWith('/login') && !path.startsWith('/register')) {
         localStorage.removeItem('iems_token');
@@ -41,6 +39,27 @@ export type Track =
   | 'staff'
   | 'customer';
 
+export type PrinterType = 'FDM_open' | 'FDM_closed' | 'Resin';
+
+export type ReservationStatus =
+  | 'pending_review'
+  | 'pending_confirmation'
+  | 'confirmed'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
+
+export interface FileAttachment {
+  url: string;
+  originalName: string;
+}
+
+export interface ReservationComment {
+  from: 'admin' | 'student';
+  message: string;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -59,7 +78,7 @@ export interface Printer {
   _id: string;
   name: string;
   modelName: string;
-  type: 'FDM' | 'Resin';
+  type: PrinterType;
   status: 'available' | 'in_use' | 'maintenance';
   currentUser?: { firstName: string; lastName: string; studentId: string };
   totalHoursUsed: number;
@@ -72,23 +91,25 @@ export interface Printer {
 export interface Reservation {
   _id: string;
   user: { _id: string; firstName: string; lastName: string; studentId: string; email?: string; track?: string };
-  printer: { _id: string; name: string; modelName?: string; type?: string; bambuSerial?: string; bambuIp?: string; bambuAccessCode?: string };
+  printer?: { _id: string; name: string; modelName?: string; type?: PrinterType; bambuSerial?: string; bambuIp?: string; bambuAccessCode?: string };
+  printerType: PrinterType;
   jobName: string;
   filamentType?: string;
-  filamentColor?: string;
-  filamentWeight?: number;
+  infillPercent?: number;
   scheduledStart: string;
-  scheduledHours: number;
+  estimatedHours?: number;
+  estimatedWeight?: number;
+  hoursConsumed?: number;
   actualStart?: string;
   actualEnd?: string;
-  hoursConsumed?: number;
-  status: 'reserved' | 'in_progress' | 'completed' | 'cancelled';
-  fileUrl?: string;
-  modelFileName?: string;
-  infillPercent?: number;
-  cost?: number;
+  status: ReservationStatus;
+  files: FileAttachment[];
+  sliceImages: FileAttachment[];
+  resultPhotos: FileAttachment[];
+  comments: ReservationComment[];
   notes?: string;
   pickupTime?: string;
+  createdAt: string;
 }
 
 export interface Filament {
