@@ -158,7 +158,7 @@ export default function RegisterPage() {
                 <SelectTrigger id="track">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <SelectContent>
                   <SelectItem value="training">นักเรียนที่เข้าอบรมของศูนย์วิจัยนวัตกรรมฯ</SelectItem>
                   <SelectItem value="inno_smart">นักเรียน Inno / Smart</SelectItem>
                   <SelectItem value="quota_bme">Quota Track: BME</SelectItem>

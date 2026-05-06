@@ -45,6 +45,7 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
+      collisionPadding={12}
       {...props}
     >
       <SelectPrimitive.ScrollUpButton className="flex cursor-default items-center justify-center py-1">

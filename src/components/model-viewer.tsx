@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Layers, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
-import type { Object3D, BufferGeometry, BufferAttribute } from 'three';
+import type { Object3D, BufferGeometry, BufferAttribute, WebGLRenderer } from 'three';
 
 type ClipFn = (pct: number) => void;
 
@@ -90,7 +90,12 @@ export default function ModelViewer({
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0xf5f3ff);
       const camera = new THREE.PerspectiveCamera(45, w / h, 0.001, 100000);
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      let renderer: WebGLRenderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+      } catch (e) {
+        throw new Error('WebGL ไม่รองรับบนเบราว์เซอร์นี้');
+      }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(w, h);
       renderer.localClippingEnabled = true;
@@ -169,59 +174,73 @@ export default function ModelViewer({
         if (isObjectUrl) URL.revokeObjectURL(url);
       };
 
-      const onError = (label: string) => () => {
+      const onError = (label: string) => (err: unknown) => {
+        console.error(`[ModelViewer] ${label} load error:`, err);
         if (!cancelled) { setErrorMsg(`โหลด ${label} ไม่ได้`); setStatus('error'); }
+        if (isObjectUrl) URL.revokeObjectURL(url);
+      };
+
+      const handleCbError = (label: string, err: unknown) => {
+        console.error(`[ModelViewer] ${label} callback error:`, err);
+        if (!cancelled) {
+          setErrorMsg(`${label}: ${(err as Error)?.message || 'ประมวลผลไม่ได้'}`);
+          setStatus('error');
+        }
         if (isObjectUrl) URL.revokeObjectURL(url);
       };
 
       if (ext === 'stl') {
         const loader = new STLLoader();
         loader.load(url, (geo) => {
-          if (cancelled) { if (isObjectUrl) URL.revokeObjectURL(url); return; }
-          geo.computeVertexNormals();
+          try {
+            if (cancelled) { if (isObjectUrl) URL.revokeObjectURL(url); return; }
+            geo.computeVertexNormals();
 
-          const pos = geo.attributes.position.array as Float32Array;
-          const idx = geo.index
-            ? (geo.index.array as Uint16Array | Uint32Array)
-            : null;
-          const { volumeMm3, surfaceAreaMm2 } = computeGeometryStats(pos, idx);
+            const pos = geo.attributes.position.array as Float32Array;
+            const idx = geo.index
+              ? (geo.index.array as Uint16Array | Uint32Array)
+              : null;
+            const { volumeMm3, surfaceAreaMm2 } = computeGeometryStats(pos, idx);
 
-          const rawBbox = new THREE.Box3().setFromBufferAttribute(geo.attributes.position as BufferAttribute);
-          const rawSize = new THREE.Vector3();
-          rawBbox.getSize(rawSize);
+            const rawBbox = new THREE.Box3().setFromBufferAttribute(geo.attributes.position as BufferAttribute);
+            const rawSize = new THREE.Vector3();
+            rawBbox.getSize(rawSize);
 
-          const stats: ModelStats = {
-            dims: { x: +rawSize.x.toFixed(2), y: +rawSize.y.toFixed(2), z: +rawSize.z.toFixed(2) },
-            volumeMm3,
-            surfaceAreaMm2,
-          };
-          setupScene(new THREE.Mesh(geo, material), stats);
+            const stats: ModelStats = {
+              dims: { x: +rawSize.x.toFixed(2), y: +rawSize.y.toFixed(2), z: +rawSize.z.toFixed(2) },
+              volumeMm3,
+              surfaceAreaMm2,
+            };
+            setupScene(new THREE.Mesh(geo, material), stats);
+          } catch (err) { handleCbError('STL', err); }
         }, undefined, onError('STL'));
 
       } else if (ext === 'obj') {
         const loader = new OBJLoader();
         loader.load(url, (group) => {
-          let totalVol = 0, totalArea = 0;
-          group.traverse((child) => {
-            if ((child as any).isMesh) {
-              (child as any).material = material;
-              const geo = (child as any).geometry as BufferGeometry;
-              const pos = geo.attributes.position.array as Float32Array;
-              const idx = geo.index ? (geo.index.array as Uint16Array | Uint32Array) : null;
-              const s = computeGeometryStats(pos, idx);
-              totalVol += s.volumeMm3;
-              totalArea += s.surfaceAreaMm2;
-            }
-          });
-          const rawBbox = new THREE.Box3().setFromObject(group);
-          const rawSize = new THREE.Vector3();
-          rawBbox.getSize(rawSize);
-          const stats: ModelStats = {
-            dims: { x: +rawSize.x.toFixed(2), y: +rawSize.y.toFixed(2), z: +rawSize.z.toFixed(2) },
-            volumeMm3: totalVol,
-            surfaceAreaMm2: totalArea,
-          };
-          setupScene(group, stats);
+          try {
+            let totalVol = 0, totalArea = 0;
+            group.traverse((child) => {
+              if ((child as any).isMesh) {
+                (child as any).material = material;
+                const geo = (child as any).geometry as BufferGeometry;
+                const pos = geo.attributes.position.array as Float32Array;
+                const idx = geo.index ? (geo.index.array as Uint16Array | Uint32Array) : null;
+                const s = computeGeometryStats(pos, idx);
+                totalVol += s.volumeMm3;
+                totalArea += s.surfaceAreaMm2;
+              }
+            });
+            const rawBbox = new THREE.Box3().setFromObject(group);
+            const rawSize = new THREE.Vector3();
+            rawBbox.getSize(rawSize);
+            const stats: ModelStats = {
+              dims: { x: +rawSize.x.toFixed(2), y: +rawSize.y.toFixed(2), z: +rawSize.z.toFixed(2) },
+              volumeMm3: totalVol,
+              surfaceAreaMm2: totalArea,
+            };
+            setupScene(group, stats);
+          } catch (err) { handleCbError('OBJ', err); }
         }, undefined, onError('OBJ'));
       } else {
         setErrorMsg('รองรับ .stl และ .obj เท่านั้น');
@@ -246,7 +265,15 @@ export default function ModelViewer({
       };
       window.addEventListener('resize', onResize);
       return () => window.removeEventListener('resize', onResize);
-    })().then((cleanup) => { if (cancelled) cleanup?.(); });
+    })().then((cleanup) => {
+      if (cancelled) cleanup?.();
+    }).catch((err) => {
+      console.error('[ModelViewer] error:', err);
+      if (!cancelled) {
+        setErrorMsg(err?.message || 'โหลดโมเดลไม่ได้ — ดู console');
+        setStatus('error');
+      }
+    });
 
     return () => {
       cancelled = true;
